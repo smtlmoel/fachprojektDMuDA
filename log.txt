@@ -1,0 +1,38 @@
+Epoch: 1 completed
+Epoch: 2 completed
+Epoch: 3 completed
+
+Accuracy: 8.92 %Epoch: 1 completed
+Epoch: 2 completed
+Epoch: 3 completed
+
+Accuracy: 8.92 %Epoch: 1 completed
+
+Accuracy: 8.92 %Epoch: 1 completed
+
+Accuracy: 9.80 %Epoch: 1 completed
+Epoch: 2 completed
+Epoch: 3 completed
+
+Accuracy: 95.82 %Epoch: 1 completed
+Epoch: 2 completed
+Epoch: 3 completed
+
+Accuracy: 9.80 %Epoch: 1 completed
+Epoch: 2 completed
+Epoch: 3 completed
+Epoch: 4 completed
+Epoch: 5 completed
+Epoch: 6 completed
+Epoch: 7 completed
+Epoch: 8 completed
+Epoch: 9 completed
+Epoch: 10 completed
+
+Accuracy: 97.64 %Epoch: 1 completed
+
+Accuracy: 91.76 %Epoch: 1 completed
+
+Accuracy: 90.78 %Epoch: 1 completed
+
+Accuracy: 90.99 %

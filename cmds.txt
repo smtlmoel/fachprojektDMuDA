@@ -1,0 +1,5 @@
+## Speicher anzeigen ##
+cat /proc/meminfo
+
+## Datei hochladen ##
+scp C:/Users/tsmwa/OneDrive/Dokumente/Programmieren/fachprojektCNN/main.py fpdm2113@ls8fpga1.cs.tu-dortmund.de:/home/fpdm2113/firstCNN
