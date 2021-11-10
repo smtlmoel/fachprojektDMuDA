@@ -276,7 +276,7 @@ def mnist(epoch: int, batch_size: int, network: torch.nn.Module):
 
 def main(args):
     print("SmallCNN:")
-    mnist(10, 64, SmallCNN())
+    mnist(1, 64, SmallCNN())
     print("LargeCNN:")
     mnist(10, 64, LargeCNN())
 
