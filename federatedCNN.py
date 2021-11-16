@@ -4,6 +4,12 @@ from torch import nn as nn
 import torch.utils.data
 import torchvision.transforms as transforms
 
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+
+# TODO Multi-thread clients
+# TODO Track communication size
+
 
 class Net(torch.nn.Module):
     def __init__(self):
@@ -83,7 +89,7 @@ class Net(torch.nn.Module):
         return out
 
 
-def train(num_clients, epoch, batch_size):
+def train(num_clients, epochs, communication_rounds, batch_size):
     # Move network to device GPU or CPU
     if torch.cuda.is_available():
         dev = "cuda:0"
@@ -116,22 +122,21 @@ def train(num_clients, epoch, batch_size):
                                   transform=transforms.ToTensor(),
                                   download=True)
 
-    traindata_split = torch.utils.data.random_split(cifar_train,
-                                                    [int(cifar_train.data.shape[0] / 4) for _ in range(4)])
+    train_data_split = torch.utils.data.random_split(cifar_train,
+                                                     [int(cifar_train.data.shape[0] / 4) for _ in range(4)])
 
     train_loaders = [torch.utils.data.DataLoader(dataset=x,
-                                                batch_size=batch_size,
-                                                num_workers=4,
-                                                shuffle=True) for x in traindata_split]
+                                                 batch_size=batch_size,
+                                                 num_workers=4,
+                                                 shuffle=True) for x in train_data_split]
 
     central_loader = torch.utils.data.DataLoader(dataset=cifar_train,
-                                               batch_size=batch_size,
-                                               num_workers=4,
-                                               shuffle=True)
+                                                 batch_size=batch_size,
+                                                 num_workers=4,
+                                                 shuffle=True)
 
-
-    #  Initialize loss as CrossEntropyLoss
-    crosslosses = [nn.CrossEntropyLoss() for network in networks]
+    # Initialize loss as CrossEntropyLoss
+    crosslosses = [nn.CrossEntropyLoss() for _ in networks]
     central_crossloss = nn.CrossEntropyLoss()
 
     # Initialize optimizer as SDG-optimizer
@@ -147,19 +152,32 @@ def train(num_clients, epoch, batch_size):
             
     Client:
         for epoch=10
-            for batchs
+            for batches
                 train
             end for
         end for
         
         send parameter
     '''
-    communication_rounds = 1
+
+    federated_loss = [{'epoch_loss': [], 'batch_loss': []} for _ in range(num_clients)]
+    central_loss = {'epoch_loss': [], 'batch_loss': []}
 
     # Federated training
+    print("Start federated training")
     for t in range(communication_rounds):
-        for id in range(num_clients):
-            id_loss = local_learner(device, epoch, train_loaders[id], networks[id], optimizer[id], crosslosses[id])
+        print('--------------------')
+        print(f'Start communication round {t}:')
+        for idx in range(num_clients):
+            print(f'Client {idx} training:')
+            loss_tuple = local_learner(device, epochs,
+                                       train_loaders[idx],
+                                       networks[idx],
+                                       optimizer[idx],
+                                       crosslosses[idx])
+            # federated_loss[id].update(federated_loss[id].get('batch_loss') + (loss_tuple.get('batch_loss')))
+            federated_loss[idx].get('batch_loss').extend(loss_tuple.get('batch_loss'))
+            federated_loss[idx].get('epoch_loss').extend(loss_tuple.get('epoch_loss'))
 
         # Load parameters from individual networks and average in global network
         global_dict = global_network.state_dict()
@@ -170,13 +188,75 @@ def train(num_clients, epoch, batch_size):
         for network in networks:
             network.load_state_dict(global_network.state_dict())
 
-        central_loss = local_learner(device, epoch, central_loader, central_network, central_optimizer, central_crossloss)
+        print('--------------------')
 
+    # Central training
+    print("Start central training")
+    loss_tuple = local_learner(device,
+                               epochs * communication_rounds,
+                               central_loader,
+                               central_network,
+                               central_optimizer,
+                               central_crossloss)
+    central_loss.get('batch_loss').extend(loss_tuple.get('batch_loss'))
+    central_loss.get('epoch_loss').extend(loss_tuple.get('epoch_loss'))
 
     # Load test data to cpu (gpu memory would overflow)
     test_loader = torch.utils.data.DataLoader(dataset=cifar_test,
-                                               batch_size=len(cifar_test),
-                                               shuffle=True)
+                                              batch_size=len(cifar_test),
+                                              shuffle=True)
+    # Plotting
+    plt.style.use(['seaborn-dark-palette', 'ggplot'])
+
+    # Plotting batch loss
+    batch_loss_length = 0
+    for idx, loss_tuple in enumerate(federated_loss):
+        batch_loss = loss_tuple.get('batch_loss')
+        batch_loss_length = len(batch_loss)
+        plt.plot([i for i in range(0, len(batch_loss))], batch_loss, label=f'Client {idx}')
+
+    for communication_round in range(communication_rounds-1):
+        plt.axvline(x=batch_loss_length/communication_rounds*(communication_round+1), color='black')
+
+    communication_line = mlines.Line2D([0], [0], color='Black', label='Communication Rounds')
+
+    plt.title('Federated clients: loss per batch')
+    plt.xlabel('batch_id')
+    plt.ylabel('batch_loss')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.extend([communication_line])
+    plt.legend(handles=handles)
+    plt.show()
+
+    plt.title('Central Network: loss per batch')
+    plt.xlabel('batch_id')
+    plt.ylabel('batch_loss')
+    plt.plot([i for i in range(0, len(central_loss.get('batch_loss')))], central_loss.get('batch_loss'),
+             label='Central Network')
+    plt.legend()
+    plt.show()
+
+    # Plotting epoch loss
+    epoch_loss_length = 0
+    for loss_tuple in federated_loss:
+        epoch_loss = loss_tuple.get('epoch_loss')
+        epoch_loss_length = len(epoch_loss)
+        plt.plot([i for i in range(0, len(epoch_loss))], epoch_loss)
+
+    for communication_round in range(communication_rounds-1):
+        plt.axvline(x=epoch_loss_length/communication_rounds*(communication_round+1)-0.5, color='black')
+
+    plt.plot([i for i in range(0, len(central_loss.get('epoch_loss')))], central_loss.get('epoch_loss'),
+             label='Central Network')
+
+    plt.title('Loss per epoch')
+    plt.xlabel('epoch_id')
+    plt.ylabel('epoch_loss')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.extend([communication_line])
+    plt.legend(handles=handles)
+    plt.show()
+
     # Test global network
     for x_test, y_test in test_loader:
         global_network.to('cpu')
@@ -196,11 +276,10 @@ def train(num_clients, epoch, batch_size):
         print(s)
 
 
-
-    # Calculate accuracy and print it
-
-
 def local_learner(device, epoch, loader, network, optimizer, crossloss):
+
+    epoch_loss = []
+    batch_loss = []
     # Start training
     for epoch in range(epoch):
         for i, (batch_X, batch_Y) in enumerate(loader):
@@ -219,17 +298,20 @@ def local_learner(device, epoch, loader, network, optimizer, crossloss):
             # Append loss to all_loss for tracking
             with torch.no_grad():
                 current_loss = loss.cpu().detach().numpy()
+                batch_loss.append(current_loss)
 
         # print progress
         if epoch % 1 == 0:
-            s = f'Epoch: {epoch + 1} completed. Current loss: {current_loss} '
+            s = f'-> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
             print(s)
 
-    return current_loss
+        epoch_loss.append(batch_loss[-1])
+
+    return {'epoch_loss': epoch_loss, 'batch_loss': batch_loss}
 
 
 def main():
-    train(4, 5, 64)
+    train(num_clients=2, epochs=3, communication_rounds=4, batch_size=64)
 
 
 if __name__ == '__main__':
