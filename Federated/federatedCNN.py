@@ -10,8 +10,6 @@ import queue
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
-# TODO Track communication size
-
 
 def train(num_clients, epochs, communication_rounds, batch_size):
     # Move network to device GPU or CPU
@@ -26,6 +24,9 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     # Initialise Models
     central_network = Net()
     global_network = Net()
+
+    mem_params = sum([param.nelement()*param.element_size() for param in global_network.parameters()])
+    print(f'Memory Parameters: {mem_params/1024} kB')
 
     central_network.load_state_dict(global_network.state_dict())
     central_network.to(device)
@@ -47,7 +48,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
                                   download=True)
 
     train_data_split = torch.utils.data.random_split(cifar_train,
-                                                     [int(cifar_train.data.shape[0] / 4) for _ in range(4)])
+                                                     [int(cifar_train.data.shape[0] / num_clients) for _ in range(num_clients)])
 
     train_loaders = [torch.utils.data.DataLoader(dataset=x,
                                                  batch_size=batch_size,
@@ -89,7 +90,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
 
     # Federated training
     print("\nStart federated training")
-    print('--------------------\n')
+    print('--------------------')
     loss_dict_queue = queue.Queue()
     for t in range(communication_rounds):
         print(f'Start communication round {t}: \n')
@@ -122,7 +123,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
 
     # Central training
     print("Start central training")
-    print('--------------------\n')
+    print('--------------------')
     central_thread = ClientThread("Central",
                                   epochs * communication_rounds,
                                   central_loader,
