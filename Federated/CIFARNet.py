@@ -24,7 +24,7 @@ class CIFARNet(nn.Module):
         -> MaxPool (8x8x80)
         '''
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 80, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
+            nn.Conv2d(96, 80, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
             nn.ReLU(),
             nn.MaxPool2d((2, 2), 2)
         )
@@ -37,9 +37,9 @@ class CIFARNet(nn.Module):
         -> ReLu
         '''
         self.conv2 = nn.Sequential(
-            nn.Conv2d(3, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
+            nn.Conv2d(80, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
             nn.ReLU(),
-            nn.Conv2d(3, 64, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
+            nn.Conv2d(96, 64, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2)),
             nn.ReLU()
         )
         '''
