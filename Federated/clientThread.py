@@ -12,12 +12,15 @@ class ClientThread(Thread):
         self.loader = loader
         self.network = network
         self.optimizer = optimizer
+        #self.lr_scheduler = lr_scheduler
         self.crossloss = crossloss
         self.return_queue = return_queue
 
     def local_learner(self, device, epoch, loader, network, optimizer, crossloss):
         epoch_loss = []
         batch_loss = []
+
+        network.train()
         # Start training
         for epoch in range(epoch):
             for i, (batch_X, batch_Y) in enumerate(loader):
@@ -44,6 +47,7 @@ class ClientThread(Thread):
                 print(s)
 
             epoch_loss.append(batch_loss[-1])
+            # lr_scheduler.step()
 
         return {'idx': self.threadID, 'epoch_loss': epoch_loss, 'batch_loss': batch_loss}
 
@@ -57,6 +61,12 @@ class ClientThread(Thread):
             # print("Device for training: cpu")
         device = torch.device(dev)
 
-        self.return_queue.put(self.local_learner(device, self.epoch, self.loader, self.network, self.optimizer, self.crossloss))
+        self.return_queue.put(self.local_learner(device,
+                                                 self.epoch,
+                                                 self.loader,
+                                                 self.network,
+                                                 self.optimizer,
+                                                 #self.lr_scheduler,
+                                                 self.crossloss))
 
 

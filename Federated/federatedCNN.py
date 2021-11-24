@@ -53,20 +53,26 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     train_loaders = [torch.utils.data.DataLoader(dataset=x,
                                                  batch_size=batch_size,
                                                  num_workers=4,
-                                                 shuffle=True) for x in train_data_split]
+                                                 shuffle=True,
+                                                 pin_memory=True,
+                                                 drop_last=True) for x in train_data_split]
 
     central_loader = torch.utils.data.DataLoader(dataset=cifar_train,
                                                  batch_size=batch_size,
-                                                 num_workers=4,
-                                                 shuffle=True)
+                                                 num_workers=16,
+                                                 shuffle=True,
+                                                 pin_memory=True,
+                                                 drop_last=True)
 
     # Initialize loss as CrossEntropyLoss
     crosslosses = [nn.CrossEntropyLoss() for _ in networks]
     central_crossloss = nn.CrossEntropyLoss()
 
-    # Initialize optimizer as SDG-optimizer
-    optimizer = [torch.optim.SGD(network.parameters(), lr=0.03, momentum=0.9) for network in networks]
-    central_optimizer = torch.optim.SGD(central_network.parameters(), lr=0.03, momentum=0.9)
+    # Initialize optimizers as SDG-optimizers
+    optimizers = [torch.optim.Adam(network.parameters(), lr=0.0001, weight_decay=5e-4) for network in networks]
+    # lr_schedulers = [torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) for optimizer in optimizers]
+    central_optimizer = torch.optim.Adam(central_network.parameters(), lr=0.0001, weight_decay=5e-4)
+    # central_lr_scheduler = torch.optim.lr_scheduler.StepLR(central_optimizer, step_size=10, gamma=0.1)
 
     '''
     Global:
@@ -97,7 +103,8 @@ def train(num_clients, epochs, communication_rounds, batch_size):
         threads = [ClientThread(idx, epochs,
                                 train_loaders[idx],
                                 networks[idx],
-                                optimizer[idx],
+                                optimizers[idx],
+                                #lr_schedulers[idx],
                                 crosslosses[idx], loss_dict_queue) for idx in range(num_clients)]
 
         for thread in threads:
@@ -129,6 +136,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
                                   central_loader,
                                   central_network,
                                   central_optimizer,
+                                  #central_lr_scheduler,
                                   central_crossloss,
                                   loss_dict_queue)
     central_thread.start()
@@ -197,6 +205,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     plt.show()
 
     # Test global network
+    global_network.eval()
     for x_test, y_test in test_loader:
         global_network.to('cpu')
         prediction = global_network(x_test)
@@ -206,6 +215,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
         print(s)
 
     # Test central network
+    central_network.eval()
     for x_test, y_test in test_loader:
         central_network.to('cpu')
         prediction = central_network(x_test)
@@ -216,7 +226,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
 
 
 def main():
-    train(num_clients=2, epochs=3, communication_rounds=4, batch_size=64)
+    train(num_clients=4, epochs=10, communication_rounds=5, batch_size=64)
 
 
 if __name__ == '__main__':

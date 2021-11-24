@@ -1,0 +1,7 @@
+Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
+
+1. Auswirkung Anzahl der Kommunikationsrunden (bei insgesamt gleich vielen Epochen)
+
+2. Welche Parameter schicken? / Wie viele?
+    ⇾ Methoden in Research suchen
+    ⇾ Testen und vergleichen: Wie viel schlechter und wie viel weniger Daten? → Lohnt es sich?
