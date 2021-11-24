@@ -4,6 +4,7 @@ from torch import nn as nn
 import torch.utils.data
 import torchvision.transforms as transforms
 from CNNNet import Net
+from CIFARNet import CIFARNet
 from clientThread import ClientThread
 import queue
 
@@ -22,8 +23,8 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     device = torch.device(dev)
 
     # Initialise Models
-    central_network = Net()
-    global_network = Net()
+    central_network = CIFARNet()
+    global_network = CIFARNet()
 
     mem_params = sum([param.nelement()*param.element_size() for param in global_network.parameters()])
     print(f'Memory Parameters: {mem_params/1024} kB')
@@ -31,7 +32,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     central_network.load_state_dict(global_network.state_dict())
     central_network.to(device)
 
-    networks = [Net() for _ in range(num_clients)]
+    networks = [CIFARNet() for _ in range(num_clients)]
     for network in networks:
         network.load_state_dict(global_network.state_dict())
         network.to(device)
