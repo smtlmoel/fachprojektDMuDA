@@ -57,7 +57,7 @@ class Net(nn.Module):
         self.fcLayer1 = nn.Sequential(
             nn.Linear(512, 128),
             nn.ReLU(),
-            nn.Dropout()
+            nn.Dropout(0.4)
         )
         '''
         Input (128)

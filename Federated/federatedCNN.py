@@ -4,7 +4,7 @@ from torch import nn as nn
 import torch.utils.data
 import torchvision.transforms as transforms
 from CNNNet import Net
-from CIFARNet import CIFARNet
+# from CIFARNet import CIFARNet
 from clientThread import ClientThread
 import queue
 
@@ -107,8 +107,10 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
                                 train_loaders[idx],
                                 networks[idx],
                                 optimizers[idx],
-                                #lr_schedulers[idx],
-                                crosslosses[idx], loss_dict_queue) for idx in range(num_clients)]
+                                # lr_schedulers[idx],
+                                crosslosses[idx],
+                                loss_dict_queue,
+                                output_file) for idx in range(num_clients)]
 
         for thread in threads:
             thread.start()
@@ -120,6 +122,7 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
             federated_loss[idx].get('batch_loss').extend(loss_dict.get('batch_loss'))
             federated_loss[idx].get('epoch_loss').extend(loss_dict.get('epoch_loss'))
 
+        # TODO change aggregation
         # Load parameters from individual networks and average in global network
         global_dict = global_network.state_dict()
         for k in global_dict.keys():
@@ -129,19 +132,21 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
         for network in networks:
             network.load_state_dict(global_network.state_dict())
 
+        output_file.write("--------------------\n")
         print('-------------------- \n')
 
     # Central training
-    print("Start central training")
-    print('--------------------')
+    output_file.write("Start central training\n--------------------\n")
+    print("Start central training\n--------------------\n")
     central_thread = ClientThread("Central",
                                   epochs * communication_rounds,
                                   central_loader,
                                   central_network,
                                   central_optimizer,
-                                  #central_lr_scheduler,
+                                  # central_lr_scheduler,
                                   central_crossloss,
-                                  loss_dict_queue)
+                                  loss_dict_queue,
+                                  output_file)
     central_thread.start()
     central_thread.join()
     loss_dict = loss_dict_queue.get()
@@ -215,6 +220,7 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
         correct_prediction = (torch.max(prediction.data, dim=1)[1] == y_test.data)
         accuracy = correct_prediction.float().mean().item()
         s = '\n Global Accuracy: {:2.2f}%'.format(accuracy * 100)
+        output_file.write(s)
         print(s)
 
     # Test central network
@@ -225,13 +231,14 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
         correct_prediction = (torch.max(prediction.data, dim=1)[1] == y_test.data)
         accuracy = correct_prediction.float().mean().item()
         s = '\n Central Accuracy: {:2.2f}%'.format(accuracy * 100)
+        output_file.write(s)
         print(s)
 
     output_file.close()
 
 
 def main():
-    train(num_clients=4, epochs=10, communication_rounds=5, batch_size=64)
+    train(num_clients=4, epochs=10, communication_rounds=5, batch_size=64, experiment_name="federatedCNNMain")
 
 
 if __name__ == '__main__':
