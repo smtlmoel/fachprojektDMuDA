@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
 
-def train(num_clients, epochs, communication_rounds, batch_size):
+def train(num_clients, epochs, communication_rounds, batch_size, experiment_name):
     # Move network to device GPU or CPU
     if torch.cuda.is_available():
         dev = "cuda:0"
@@ -23,8 +23,8 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     device = torch.device(dev)
 
     # Initialise Models
-    central_network = CIFARNet()
-    global_network = CIFARNet()
+    central_network = Net()
+    global_network = Net()
 
     mem_params = sum([param.nelement()*param.element_size() for param in global_network.parameters()])
     print(f'Memory Parameters: {mem_params/1024} kB')
@@ -32,7 +32,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     central_network.load_state_dict(global_network.state_dict())
     central_network.to(device)
 
-    networks = [CIFARNet() for _ in range(num_clients)]
+    networks = [Net() for _ in range(num_clients)]
     for network in networks:
         network.load_state_dict(global_network.state_dict())
         network.to(device)
@@ -96,10 +96,12 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     central_loss = {'epoch_loss': [], 'batch_loss': []}
 
     # Federated training
-    print("\nStart federated training")
-    print('--------------------')
+    output_file = open(f"logs/output_{experiment_name}.txt", "w")
+    output_file.write("Start federated training\n--------------------")
+    print("\nStart federated training\n--------------------")
     loss_dict_queue = queue.Queue()
     for t in range(communication_rounds):
+        output_file.write(f"Start communication round {t}: \n")
         print(f'Start communication round {t}: \n')
         threads = [ClientThread(idx, epochs,
                                 train_loaders[idx],
@@ -171,7 +173,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     handles, labels = plt.gca().get_legend_handles_labels()
     handles.extend([communication_line])
     plt.legend(handles=handles)
-    plt.savefig('fedClients_lossPerBatch.png')
+    plt.savefig(f'figs/fedClients_lossPerBatch_{experiment_name}.png')
     plt.show()
 
     plt.title('Central Network: loss per batch')
@@ -180,7 +182,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     plt.plot([i for i in range(0, len(central_loss.get('batch_loss')))], central_loss.get('batch_loss'),
              label='Central Network')
     plt.legend()
-    plt.savefig('centralNetwork_lossPerBatch.png')
+    plt.savefig(f'figs/centralNetwork_lossPerBatch_{experiment_name}.png')
     plt.show()
 
     # Plotting epoch loss
@@ -202,7 +204,7 @@ def train(num_clients, epochs, communication_rounds, batch_size):
     handles, labels = plt.gca().get_legend_handles_labels()
     handles.extend([communication_line])
     plt.legend(handles=handles)
-    plt.savefig('epochLoss.png')
+    plt.savefig(f'figs/epochLoss_{experiment_name}.png')
     plt.show()
 
     # Test global network
@@ -224,6 +226,8 @@ def train(num_clients, epochs, communication_rounds, batch_size):
         accuracy = correct_prediction.float().mean().item()
         s = '\n Central Accuracy: {:2.2f}%'.format(accuracy * 100)
         print(s)
+
+    output_file.close()
 
 
 def main():
