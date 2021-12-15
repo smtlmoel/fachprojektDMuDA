@@ -23,18 +23,10 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
     device = torch.device(dev)
 
     # Initialise Models
-    central_network = Net()
-    global_network = Net()
-
-    mem_params = sum([param.nelement()*param.element_size() for param in global_network.parameters()])
-    print(f'Memory Parameters: {mem_params/1024} kB')
-
-    central_network.load_state_dict(global_network.state_dict())
-    central_network.to(device)
-
-    networks = [Net() for _ in range(num_clients)]
+    global_network = torch.load("models/initial_weights.pth")
+    global_network.to(device)
+    networks = [torch.load("models/initial_weights.pth") for _ in range(num_clients)]
     for network in networks:
-        network.load_state_dict(global_network.state_dict())
         network.to(device)
 
     # Load Cifar-10 Dataset
@@ -53,56 +45,29 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
 
     train_loaders = [torch.utils.data.DataLoader(dataset=x,
                                                  batch_size=batch_size,
-                                                 num_workers=4,
+                                                 num_workers=1,
                                                  shuffle=True,
                                                  pin_memory=True,
                                                  drop_last=True) for x in train_data_split]
 
-    central_loader = torch.utils.data.DataLoader(dataset=cifar_train,
-                                                 batch_size=batch_size,
-                                                 num_workers=16,
-                                                 shuffle=True,
-                                                 pin_memory=True,
-                                                 drop_last=True)
-
     # Initialize loss as CrossEntropyLoss
     crosslosses = [nn.CrossEntropyLoss() for _ in networks]
-    central_crossloss = nn.CrossEntropyLoss()
-
     # Initialize optimizers as SDG-optimizers
     optimizers = [torch.optim.Adam(network.parameters(), lr=0.0001, weight_decay=5e-4) for network in networks]
-    # lr_schedulers = [torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) for optimizer in optimizers]
-    central_optimizer = torch.optim.Adam(central_network.parameters(), lr=0.0001, weight_decay=5e-4)
-    # central_lr_scheduler = torch.optim.lr_scheduler.StepLR(central_optimizer, step_size=10, gamma=0.1)
 
-    '''
-    Global:
-        for t=1 communication_round:
-            call clients and wait
-            avg. parameters
-            share clients
-            
-    Client:
-        for epoch=10
-            for batches
-                train
-            end for
-        end for
-        
-        send parameter
-    '''
-
+    # Loss
     federated_loss = [{'epoch_loss': [], 'batch_loss': []} for _ in range(num_clients)]
-    central_loss = {'epoch_loss': [], 'batch_loss': []}
 
     # Federated training
     output_file = open(f"logs/output_{experiment_name}.txt", "w")
     output_file.write("Start federated training\n--------------------")
     print("\nStart federated training\n--------------------")
     loss_dict_queue = queue.Queue()
+
     for t in range(communication_rounds):
         output_file.write(f"Start communication round {t}: \n")
         print(f'Start communication round {t}: \n')
+
         threads = [ClientThread(idx, epochs,
                                 train_loaders[idx],
                                 networks[idx],
@@ -111,12 +76,16 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
                                 crosslosses[idx],
                                 loss_dict_queue,
                                 output_file) for idx in range(num_clients)]
+        for i, thread in enumerate(threads):
+            thread.setName(f"ClientThread_{i}")
 
         for thread in threads:
+            print(f"Start {thread.getName()}")
             thread.start()
 
         for thread in threads:
             thread.join()
+            print(f"Joined {thread.getName()}")
             loss_dict = loss_dict_queue.get()
             idx = loss_dict.get('idx')
             federated_loss[idx].get('batch_loss').extend(loss_dict.get('batch_loss'))
@@ -134,24 +103,6 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
 
         output_file.write("--------------------\n")
         print('-------------------- \n')
-
-    # Central training
-    output_file.write("Start central training\n--------------------\n")
-    print("Start central training\n--------------------\n")
-    central_thread = ClientThread("Central",
-                                  epochs * communication_rounds,
-                                  central_loader,
-                                  central_network,
-                                  central_optimizer,
-                                  # central_lr_scheduler,
-                                  central_crossloss,
-                                  loss_dict_queue,
-                                  output_file)
-    central_thread.start()
-    central_thread.join()
-    loss_dict = loss_dict_queue.get()
-    central_loss.get('batch_loss').extend(loss_dict.get('batch_loss'))
-    central_loss.get('epoch_loss').extend(loss_dict.get('epoch_loss'))
 
     # Load test data to cpu (gpu memory would overflow)
     test_loader = torch.utils.data.DataLoader(dataset=cifar_test,
@@ -181,15 +132,6 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
     plt.savefig(f'figs/fedClients_lossPerBatch_{experiment_name}.png')
     plt.show()
 
-    plt.title('Central Network: loss per batch')
-    plt.xlabel('batch_id')
-    plt.ylabel('batch_loss')
-    plt.plot([i for i in range(0, len(central_loss.get('batch_loss')))], central_loss.get('batch_loss'),
-             label='Central Network')
-    plt.legend()
-    plt.savefig(f'figs/centralNetwork_lossPerBatch_{experiment_name}.png')
-    plt.show()
-
     # Plotting epoch loss
     epoch_loss_length = 0
     for idx, loss_tuple in enumerate(federated_loss):
@@ -199,9 +141,6 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
 
     for communication_round in range(communication_rounds-1):
         plt.axvline(x=epoch_loss_length/communication_rounds*(communication_round+1)-0.5, color='black')
-
-    plt.plot([i for i in range(0, len(central_loss.get('epoch_loss')))], central_loss.get('epoch_loss'),
-             label='Central Network')
 
     plt.title('Loss per epoch')
     plt.xlabel('epoch_id')
@@ -220,17 +159,6 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
         correct_prediction = (torch.max(prediction.data, dim=1)[1] == y_test.data)
         accuracy = correct_prediction.float().mean().item()
         s = '\n Global Accuracy: {:2.2f}%'.format(accuracy * 100)
-        output_file.write(s)
-        print(s)
-
-    # Test central network
-    central_network.eval()
-    for x_test, y_test in test_loader:
-        central_network.to('cpu')
-        prediction = central_network(x_test)
-        correct_prediction = (torch.max(prediction.data, dim=1)[1] == y_test.data)
-        accuracy = correct_prediction.float().mean().item()
-        s = '\n Central Accuracy: {:2.2f}%'.format(accuracy * 100)
         output_file.write(s)
         print(s)
 

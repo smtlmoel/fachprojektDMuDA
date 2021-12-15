@@ -12,6 +12,9 @@ Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
 
     Idee 1: Dropout Gradienten nicht mitschicken [Fazit: sehr schwierig]
     Idee 2: Nur bestimmte schichten schicken → Einträge aus den dictionaries löschen (bestimmte keys)
+        TODO: bei torch.stack Schicht mit key=wahl auslassen und beim updaten der lokalen models die ausgelassene Schicht gleich der Schicht des clients setzten
     Idee 3: Maske → Maske als 0/1 - Matrix und multiplizieren. → Anteil 1sen ist Prozentanteil der geschickten Daten
+        TODO: Erstelle Masken pro Schicht aus 0 und 1. Multipliziere aktuelle Schicht mit Maske
+        Variationen: Teile jedes mal Random Maske oder Teile statische Maske nur am Anfang
 
 3. Bei reduziertem Datenverkehr mehr Kommunikationsrunden für eine insgesamt bessere Performance?
