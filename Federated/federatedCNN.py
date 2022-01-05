@@ -76,20 +76,33 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
                                 crosslosses[idx],
                                 loss_dict_queue,
                                 output_file) for idx in range(num_clients)]
-        for i, thread in enumerate(threads):
-            thread.setName(f"ClientThread_{i}")
+        if device == "cuda:0":
+            for i, thread in enumerate(threads):
+                thread.setName(f"ClientThread_{i}")
 
-        for thread in threads:
-            print(f"Start {thread.getName()}")
-            thread.start()
+            for thread in threads:
+                print(f"Start {thread.getName()}")
+                thread.start()
 
-        for thread in threads:
-            thread.join()
-            print(f"Joined {thread.getName()}")
-            loss_dict = loss_dict_queue.get()
-            idx = loss_dict.get('idx')
-            federated_loss[idx].get('batch_loss').extend(loss_dict.get('batch_loss'))
-            federated_loss[idx].get('epoch_loss').extend(loss_dict.get('epoch_loss'))
+            for thread in threads:
+                thread.join()
+                print(f"Joined {thread.getName()}")
+                loss_dict = loss_dict_queue.get()
+                idx = loss_dict.get('idx')
+                federated_loss[idx].get('batch_loss').extend(loss_dict.get('batch_loss'))
+                federated_loss[idx].get('epoch_loss').extend(loss_dict.get('epoch_loss'))
+        else: # device == "cpu"
+            for i, thread in enumerate(threads):
+                # result = ClientThread.local_learner(self, device, epochs, train_loaders[idx], networks[idx], optimizers[idx], crosslosses[idx])
+                thread.setName(f"ClientThread_{i}")
+                print(f"Start {thread.getName()}")
+                thread.start()
+                thread.join()
+                print(f"Joined {thread.getName()}")
+                loss_dict = loss_dict_queue.get()
+                idx = loss_dict.get('idx')
+                federated_loss[idx].get('batch_loss').extend(loss_dict.get('batch_loss'))
+                federated_loss[idx].get('epoch_loss').extend(loss_dict.get('epoch_loss'))
 
         # TODO change aggregation
         # Load parameters from individual networks and average in global network
