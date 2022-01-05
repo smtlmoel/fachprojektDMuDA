@@ -37,7 +37,7 @@ def train(epochs, batch_size, experiment_name):
     central_loader = torch.utils.data.DataLoader(dataset=cifar_train,
                                                  batch_size=batch_size,
                                                  num_workers=4,
-                                                 shuffle=True,
+                                                 shuffle=False,
                                                  pin_memory=True,
                                                  drop_last=True)
 
@@ -54,14 +54,13 @@ def train(epochs, batch_size, experiment_name):
     loss_dict_queue = queue.Queue()
 
     # Central training
-    output_file.write("Start central training\n--------------------\n")
-    print("Start central training\n--------------------\n")
+    output_file.write("Start central training:\n")
+    print("Start central training:")
     central_thread = ClientThread("Central",
                                   epochs,
                                   central_loader,
                                   central_network,
                                   central_optimizer,
-                                  # central_lr_scheduler,
                                   central_crossloss,
                                   loss_dict_queue,
                                   output_file)
@@ -74,7 +73,7 @@ def train(epochs, batch_size, experiment_name):
     # Load test data to cpu (gpu memory would overflow)
     test_loader = torch.utils.data.DataLoader(dataset=cifar_test,
                                               batch_size=len(cifar_test),
-                                              shuffle=True)
+                                              shuffle=False)
     # Plotting
     plt.style.use(['seaborn-dark-palette', 'ggplot'])
 
@@ -106,8 +105,8 @@ def train(epochs, batch_size, experiment_name):
         prediction = central_network(x_test)
         correct_prediction = (torch.max(prediction.data, dim=1)[1] == y_test.data)
         accuracy = correct_prediction.float().mean().item()
-        s = '\n Central Accuracy: {:2.2f}%'.format(accuracy * 100)
-        output_file.write(s)
+        s = 'Central Accuracy: {:2.2f}%'.format(accuracy * 100)
+        output_file.write(s+"\n")
         print(s)
 
     output_file.close()

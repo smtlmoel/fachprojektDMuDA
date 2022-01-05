@@ -12,7 +12,6 @@ class ClientThread(Thread):
         self.loader = loader
         self.network = network
         self.optimizer = optimizer
-        #self.lr_scheduler = lr_scheduler
         self.crossloss = crossloss
         self.return_queue = return_queue
         self.output_file = output_file
@@ -43,13 +42,11 @@ class ClientThread(Thread):
                     batch_loss.append(current_loss)
 
             # print progress
-            if epoch % 1 == 0:
-                s = f'Client {self.threadID} -> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
-                print(s)
-                self.output_file.write(f"{s} \n")
+            s = f'Client {self.threadID} -> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
+            print(s)
+            self.output_file.write(f"{s} \n")
 
             epoch_loss.append(batch_loss[-1])
-            # lr_scheduler.step()
 
         return {'idx': self.threadID, 'epoch_loss': epoch_loss, 'batch_loss': batch_loss}
 
@@ -66,7 +63,4 @@ class ClientThread(Thread):
                                                  self.loader,
                                                  self.network,
                                                  self.optimizer,
-                                                 #self.lr_scheduler,
                                                  self.crossloss))
-
-
