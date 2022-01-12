@@ -39,14 +39,26 @@ def main():
     torch.save(global_network, f"models/initial_weights.pth")
 
     # Central
+    print("-----Central CNN-----")
     current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    print(f"Start time: {current_time}")
+    print("{:<10} {:<10}".format('Epochs', args.epoch))
+    print("{:<10} {:<10}".format('Batch_Size', args.batch_size))
+    print("{:<10} {:<10}".format('Clients', args.clients))
+    print("{:<10} {:<10}".format('Com-rounds', 0))
     centralCNN.train(epochs=args.epoch,
                      batch_size=args.batch_size,
                      experiment_name=f"centralNetwork_epoch={args.epoch}_{current_time}")
 
     # Federated
     for experiment in range(args.experiments):
+        print(f"-----Federated Experiment {experiment}-----")
         current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        print(f"Start time: {current_time}")
+        print("{:<10} {:<10}".format('Epochs', args.epoch))
+        print("{:<10} {:<10}".format('Batch_Size', args.batch_size))
+        print("{:<10} {:<10}".format('Clients', args.clients))
+        print("{:<10} {:<10}".format('Com-rounds', int(args.com_rounds[experiment])))
         federatedCNN.train(num_clients=args.clients,
                            epochs=int(args.epoch/int(args.com_rounds[experiment])),
                            communication_rounds=int(args.com_rounds[experiment]),

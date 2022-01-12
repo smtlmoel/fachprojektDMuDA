@@ -55,7 +55,7 @@ def train(epochs, batch_size, experiment_name):
 
     # Central training
     output_file.write("Start central training:\n")
-    print("Start central training:")
+    # print("Start central training:")
     central_thread = ClientThread("Central",
                                   epochs,
                                   central_loader,

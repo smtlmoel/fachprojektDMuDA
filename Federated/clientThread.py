@@ -5,10 +5,10 @@ import torch
 
 class ClientThread(Thread):
     # noinspection PyPep8Naming
-    def __init__(self, threadID, epoch, loader, network, optimizer, crossloss, return_queue, output_file):
+    def __init__(self, threadID, epochs, loader, network, optimizer, crossloss, return_queue, output_file):
         threading.Thread.__init__(self)
         self.threadID = threadID
-        self.epoch = epoch
+        self.epochs = epochs
         self.loader = loader
         self.network = network
         self.optimizer = optimizer
@@ -16,13 +16,13 @@ class ClientThread(Thread):
         self.return_queue = return_queue
         self.output_file = output_file
 
-    def local_learner(self, device, epoch, loader, network, optimizer, crossloss):
+    def local_learner(self, device, epochs, loader, network, optimizer, crossloss):
         epoch_loss = []
         batch_loss = []
 
         network.train()
         # Start training
-        for epoch in range(epoch):
+        for epoch in range(epochs):
             for i, (batch_X, batch_Y) in enumerate(loader):
                 x = batch_X.to(device)
                 y = batch_Y.to(device)
@@ -42,9 +42,10 @@ class ClientThread(Thread):
                     batch_loss.append(current_loss)
 
             # print progress
-            s = f'Client {self.threadID} -> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
-            print(s)
-            self.output_file.write(f"{s} \n")
+            if epochs < 50 or epoch % 5 == 0:
+                s = f'Client {self.threadID} -> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
+                print(s)
+                self.output_file.write(f"{s} \n")
 
             epoch_loss.append(batch_loss[-1])
 
@@ -59,7 +60,7 @@ class ClientThread(Thread):
         device = torch.device(dev)
 
         self.return_queue.put(self.local_learner(device,
-                                                 self.epoch,
+                                                 self.epochs,
                                                  self.loader,
                                                  self.network,
                                                  self.optimizer,

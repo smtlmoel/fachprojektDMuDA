@@ -4,7 +4,19 @@ Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
 
     Behauptung: Mehr Kommunikationsrunden bringen höhere Performance. Zu dem Preis eines größeren Datenverkehrs
     WAHR / FALSCH? [ ]
+
+    60 Epochen Training:
+    Keine Komm-Runde: sehr schlecht
+    eine Komm-Runde: schon deutlich besser
+    danach nur geringfügig besser mit jeder Komm-Runde
+    insgesamt alles min 10% schlechter als Central
+
+    300 Epochen Training:
+    ?
+
     Fazit: Abwägung höherer Datenverkehr oder mehr Performance
+
+---------------------------------------------------------------------------------------------------------------
 
 2. Welche Parameter schicken? / Wie viele?
     ⇾ Methoden in Research suchen
@@ -12,9 +24,10 @@ Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
 
     Idee 1: Dropout Gradienten nicht mitschicken [Fazit: sehr schwierig]
     Idee 2: Nur bestimmte schichten schicken → Einträge aus den dictionaries löschen (bestimmte keys)
-        TODO: bei torch.stack Schicht mit key=wahl auslassen und beim updaten der lokalen models die ausgelassene Schicht gleich der Schicht des clients setzten
     Idee 3: Maske → Maske als 0/1 - Matrix und multiplizieren. → Anteil 1sen ist Prozentanteil der geschickten Daten
-        TODO: Erstelle Masken pro Schicht aus 0 und 1. Multipliziere aktuelle Schicht mit Maske
-        Variationen: Teile jedes mal Random Maske oder Teile statische Maske nur am Anfang
+        TODO: EXTRA Variationen: Teile jedes mal Random Maske oder Teile statische Maske nur am Anfang
+
+        TODO: Anzahl, Art und Abfolge von Experimenten überlegen
+---------------------------------------------------------------------------------------------------------------
 
 3. Bei reduziertem Datenverkehr mehr Kommunikationsrunden für eine insgesamt bessere Performance?

@@ -65,7 +65,7 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
     # Federated training
     output_file = open(f"logs/output_{experiment_name}.txt", "w")
     output_file.write("Start federated training:\n")
-    print("Start federated training:")
+    # print("Start federated training:")
     loss_dict_queue = queue.Queue()
 
     for t in range(communication_rounds):
@@ -117,16 +117,30 @@ def train(num_clients, epochs, communication_rounds, batch_size, experiment_name
                 for k in global_dict.keys():
                     if k in layer_list:
                         global_dict[k] = network.state_dict()[k]
-                network.load_state_dict(global_network.state_dict())
+                network.load_state_dict(global_dict)
 
         elif aggregation == "mask":
             global_dict = global_network.state_dict()
             for k in global_dict.keys():
                 global_dict[k] = torch.stack([networks[i].state_dict()[k].float() for i in range(len(networks))], 0).mean(0)
                 global_dict[k] = global_dict[k] * mask[k]
-            # Load new parameters to individual networks
 
-            # TODO replace 0 with original client value
+            copy_dict = global_dict.copy()
+            for k in global_dict.keys():
+                copy_dict[k] = copy_dict[k].to("cpu")
+                copy_dict[k].map_(global_network.state_dict()[k].to("cpu"), lambda val, original_val: val if val != 0 else original_val)
+                copy_dict[k] = copy_dict[k].to(device)
+
+            global_network.load_state_dict(copy_dict)
+            # Load new parameters to individual networks
+            for network in networks:
+                copy_dict = global_dict.copy()
+                for k in global_dict.keys():
+                    copy_dict[k] = copy_dict[k].to("cpu")
+                    copy_dict[k].map_(network.state_dict()[k].to("cpu"), lambda val, original_val: val if val != 0 else original_val)
+                    copy_dict[k] = copy_dict[k].to(device)
+
+                network.load_state_dict(copy_dict)
 
         else:  # aggregation == "normal"
             global_dict = global_network.state_dict()
