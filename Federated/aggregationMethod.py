@@ -7,6 +7,7 @@ import centralCNN
 from datetime import datetime
 from CNNNet import Net
 
+device = None
 
 def main():
     parser = argparse.ArgumentParser()
@@ -35,6 +36,7 @@ def main():
     else:
         dev = "cpu"
         print("Device for training: cpu")
+    global device
     device = torch.device(dev)
 
     # Initiate global net
@@ -63,35 +65,104 @@ def main():
         print("{:<10} {:<10}".format('Batch_Size', args.batch_size))
         print("{:<10} {:<10}".format('Clients', args.clients))
         print("{:<10} {:<10}".format('Com-rounds', int(args.com_rounds[experiment])))
-        federatedCNN.train(num_clients=args.clients,
-                           epochs=int(args.epoch / int(args.com_rounds[experiment])),
-                           communication_rounds=int(args.com_rounds[experiment]),
-                           batch_size=args.batch_size,
-                           experiment_name=f"aggregation=normal_numComRounds={args.com_rounds[experiment]}_epochs={args.epoch}_{current_time}",
-                           aggregation='normal')
-        print("----------")
-        federatedCNN.train(num_clients=args.clients,
-                           epochs=int(args.epoch / int(args.com_rounds[experiment])),
-                           communication_rounds=int(args.com_rounds[experiment]),
-                           batch_size=args.batch_size,
-                           experiment_name=f"aggregation=layer_numComRounds={args.com_rounds[experiment]}_epochs={args.epoch}_{current_time}",
-                           aggregation='layers',
-                           layer_list=["convLayer1.0.weight", "convLayer1.0.bias"])
-        print("----------")
-        global_dict = global_network.state_dict()
-        mask = global_network.state_dict()
-        for k in global_dict:
-            rand_mat = torch.rand(size=global_dict[k].data.shape).to(device)
-            bool_tensor = rand_mat <= torch.kthvalue(torch.flatten(rand_mat), round(0.5 * math.prod(rand_mat.shape)))[0]
-            mask[k].data = torch.where(bool_tensor, torch.tensor(1).to(device), torch.tensor(0).to(device))
+        # federatedCNN.train(num_clients=args.clients,
+        #                    epochs=int(args.epoch / int(args.com_rounds[experiment])),
+        #                    communication_rounds=int(args.com_rounds[experiment]),
+        #                    batch_size=args.batch_size,
+        #                    experiment_name=f"aggregation=normal_numComRounds={args.com_rounds[experiment]}_epochs={args.epoch}_{current_time}",
+        #                    aggregation='normal')
+        # print("----------")
+        print("Layer experiments:")
+        layer_experiment(args.epoch, args.batch_size, args.clients, int(args.com_rounds[experiment]))
+        print("Mask experiments:")
+        mask_experiment(args.epoch, args.batch_size, args.clients, int(args.com_rounds[experiment]))
 
-        federatedCNN.train(num_clients=args.clients,
-                           epochs=int(args.epoch/int(args.com_rounds[experiment])),
-                           communication_rounds=int(args.com_rounds[experiment]),
-                           batch_size=args.batch_size,
-                           experiment_name=f"aggregation=mask_numComRounds={args.com_rounds[experiment]}_epochs={args.epoch}_{current_time}",
-                           aggregation='mask',
-                           mask=mask)
+
+def layer_experiment(epochs, batch_size, clients, com_round):
+    print("{:<10} {:<10}".format('layers', 'convLayer1.0.weight + convLayer1.0.bias'))
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs / com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=layer_layerConv1_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='layers',
+                       layer_list=["convLayer1.0.weight", "convLayer1.0.bias"])
+    print("----------")
+    print("{:<10} {:<10}".format('layers', 'fcLayer1.0.weight + fcLayer1.0.bias'))
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs / com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=layer_layerfc1_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='layers',
+                       layer_list=["fcLayer1.0.weight", "fcLayer1.0.bias"])
+    print("----------")
+    print("{:<10} {:<10}".format('layers', 'convLayer1.0.weight + convLayer1.0.bias + fcLayer1.0.weight + fcLayer1.0.bias'))
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs / com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=layer_layerConv1+layerfc1_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='layers',
+                       layer_list=["convLayer1.0.weight", "convLayer1.0.bias", "fcLayer1.0.weight", "fcLayer1.0.bias"])
+    print("----------")
+
+
+def mask_experiment(epochs, batch_size, clients, com_round):
+    global_network = Net()
+    print("{:<10} {:<10}".format('mask_coverage', '33%'))
+    global_dict = global_network.state_dict()
+    mask = global_network.state_dict()
+    for k in global_dict:
+        rand_mat = torch.rand(size=global_dict[k].data.shape).to(device)
+        bool_tensor = rand_mat <= torch.kthvalue(torch.flatten(rand_mat), round(0.33 * math.prod(rand_mat.shape)))[0]
+        mask[k].data = torch.where(bool_tensor, torch.tensor(1).to(device), torch.tensor(0).to(device))
+
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs/com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=mask_33%_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='mask',
+                       mask=mask)
+
+    print("{:<10} {:<10}".format('mask_coverage', '50%'))
+    global_dict = global_network.state_dict()
+    mask = global_network.state_dict()
+    for k in global_dict:
+        rand_mat = torch.rand(size=global_dict[k].data.shape).to(device)
+        bool_tensor = rand_mat <= torch.kthvalue(torch.flatten(rand_mat), round(0.5 * math.prod(rand_mat.shape)))[0]
+        mask[k].data = torch.where(bool_tensor, torch.tensor(1).to(device), torch.tensor(0).to(device))
+
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs/com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=mask_50%_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='mask',
+                       mask=mask)
+
+    print("{:<10} {:<10}".format('mask_coverage', '67%'))
+    global_dict = global_network.state_dict()
+    mask = global_network.state_dict()
+    for k in global_dict:
+        rand_mat = torch.rand(size=global_dict[k].data.shape).to(device)
+        bool_tensor = rand_mat <= torch.kthvalue(torch.flatten(rand_mat), round(0.67 * math.prod(rand_mat.shape)))[0]
+        mask[k].data = torch.where(bool_tensor, torch.tensor(1).to(device), torch.tensor(0).to(device))
+
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    federatedCNN.train(num_clients=clients,
+                       epochs=int(epochs/com_round),
+                       communication_rounds=com_round,
+                       batch_size=batch_size,
+                       experiment_name=f"aggregation=mask_67%_numComRounds={com_round}_epochs={epochs}_{current_time}",
+                       aggregation='mask',
+                       mask=mask)
 
 
 if __name__ == '__main__':

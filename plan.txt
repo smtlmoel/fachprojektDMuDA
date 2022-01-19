@@ -27,7 +27,6 @@ Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
     Idee 3: Maske → Maske als 0/1 - Matrix und multiplizieren. → Anteil 1sen ist Prozentanteil der geschickten Daten
         TODO: EXTRA Variationen: Teile jedes mal Random Maske oder Teile statische Maske nur am Anfang
 
-        TODO: Anzahl, Art und Abfolge von Experimenten überlegen
 ---------------------------------------------------------------------------------------------------------------
 
 3. Bei reduziertem Datenverkehr mehr Kommunikationsrunden für eine insgesamt bessere Performance?
