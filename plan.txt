@@ -20,12 +20,12 @@ Gesamt-Ziel: Kommunikationsaufwand beim federated learning reduzieren
 
 2. Welche Parameter schicken? / Wie viele?
     ⇾ Methoden in Research suchen
-    ⇾ Testen und vergleichen: Wie viel schlechter und wie viel weniger Daten? → Lohnt es sich?
+    ⇾ Testen und vergleichen: Wie-viel schlechter und wie viel weniger Daten? → Lohnt es sich?
 
     Idee 1: Dropout Gradienten nicht mitschicken [Fazit: sehr schwierig]
     Idee 2: Nur bestimmte schichten schicken → Einträge aus den dictionaries löschen (bestimmte keys)
     Idee 3: Maske → Maske als 0/1 - Matrix und multiplizieren. → Anteil 1sen ist Prozentanteil der geschickten Daten
-        TODO: EXTRA Variationen: Teile jedes mal Random Maske oder Teile statische Maske nur am Anfang
+        TODO: EXTRA Variationen: Teile jedes Mal Random Maske oder Teile statische Maske nur am Anfang
 
 ---------------------------------------------------------------------------------------------------------------
 

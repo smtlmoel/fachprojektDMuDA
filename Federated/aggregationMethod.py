@@ -77,6 +77,11 @@ def main():
         print("Mask experiments:")
         mask_experiment(args.epoch, args.batch_size, args.clients, int(args.com_rounds[experiment]))
 
+    # Finished
+    print("-----Finished all scheduled experiments-----")
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    print(f"Finish time: {current_time}")
+
 
 def layer_experiment(epochs, batch_size, clients, com_round):
     print("{:<10} {:<10}".format('layers', 'convLayer1.0.weight + convLayer1.0.bias'))

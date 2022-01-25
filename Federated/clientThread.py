@@ -42,7 +42,7 @@ class ClientThread(Thread):
                     batch_loss.append(current_loss)
 
             # print progress
-            if epochs < 50 or epoch % 5 == 0:
+            if epochs < 50 or epoch % 5 == 4:  # Only print epochs 5, 10, 15, ...
                 s = f'Client {self.threadID} -> Epoch: {epoch + 1} completed. Current loss: {current_loss} '
                 print(s)
                 self.output_file.write(f"{s} \n")

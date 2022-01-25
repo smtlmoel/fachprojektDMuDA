@@ -65,6 +65,11 @@ def main():
                            batch_size=args.batch_size,
                            experiment_name=f"numComRounds={args.com_rounds[experiment]}_epochs={args.epoch}_{current_time}")
 
+    # Finished
+    print("-----Finished all scheduled experiments-----")
+    current_time = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+    print(f"Finish time: {current_time}")
+
 
 if __name__ == '__main__':
     try:
