@@ -1,0 +1,24 @@
+1. Einleitung (Dwayne)
+    Problemstellung: Auswirkung der Reduktion des Kommunikationsaufwandes auf die Vorhersage-Genauigkeit eines neuronalen Netzes.
+
+    Situation: Federated Learning
+        for com_round:
+            client: for epoch
+            aggregate
+
+     * Simulation von Clients -> keine reale Kommunikation
+
+2. Vorgehen: (Dwayne)
+    Reduktion des Kommunikationsaufwandes durch Reduktion der com_runden
+    Reduktion des Kommunikationsaufwandes durch Reduktion des Aufwandes
+
+3. Architektur / Implementierung (Lars/Till)
+    *
+
+4. Ergebnisse (Lars/Till)
+    Aufbau der Experimente
+    Überblick zeigen und diskutieren
+
+5. Zusammenfassung (Lars/Till)
+    Zusammenfassung
+    Future Work

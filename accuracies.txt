@@ -1,0 +1,104 @@
+19.01.:
+
+60 Epochen: (4 Clients)
+      Central: 77.90%
+ 1  Com-Round: 60.94%
+ 2 Com-Rounds: 67.50%
+ 3 Com-Rounds: 67.88%
+ 4 Com-Rounds: 68.97%
+ 5 Com-Rounds: 68.15%
+ 6 Com-Rounds: 69.03%
+10 Com-Rounds: 68.27%
+12 Com-Rounds: 68.60%
+15 Com-Rounds: 68.99%
+
+300 Epochen:
+       Central: 79.97%
+  1  Com-Round: 50.45%
+  2 Com-Rounds: 71.20%
+  3 Com-Rounds: 73.56%
+  4 Com-Rounds: /
+  5 Com-Rounds: 75.34%
+  6 Com-Rounds: /
+ 10 Com-Rounds: 75.80%
+ 12 Com-Rounds: /
+ 15 Com-Rounds: 76.52%
+ 30 Com-Rounds: 77.73%
+ 50 Com-Rounds: 77.73%
+ 75 Com-Rounds: 77.59%
+       Central: 79.65%
+100 Com-Rounds: 77.85%
+
+26.01.:
+--keine grafik
+Num of clients:2
+      Central: 77.60%
+ 1  Com-Round: 67.51%
+ 2 Com-Rounds: 73.44%
+ 3 Com-Rounds: 74.05%
+ 4 Com-Rounds: 74.49%
+ 5 Com-Rounds: 74.31%
+ 6 Com-Rounds: 74.66%
+10 Com-Rounds: 74.64%
+--keine grafik
+Num of clients:8
+      Central: 77.56%
+ 1  Com-Round: 54.52%
+ 2 Com-Rounds: 60.44%
+ 3 Com-Rounds: 61.56%
+ 4 Com-Rounds: 61.98%
+ 5 Com-Rounds: 61.99%
+ 6 Com-Rounds: 61.92%
+10 Com-Rounds: 61.85%
+
+Aggregation: layer
+      Central: 77.90%
+ layer conv1
+ 1  Com-Round: 52.67%
+ 2 Com-Rounds: 61.47%
+ 3 Com-Rounds: 63.27%
+ 4 Com-Rounds: 64.31%
+ 5 Com-Rounds: 64.00%
+ 6 Com-Rounds: 63.82%
+
+ layer fc1
+ 1  Com-Round: 17.67%
+ 2 Com-Rounds: 25.42%
+ 3 Com-Rounds: 25.23%
+ 4 Com-Rounds: 26.18%
+ 5 Com-Rounds: 23.29%
+ 6 Com-Rounds: 27.59%
+
+ layer conv1 + fc1
+ 1  Com-Round: 13.19%
+ 2 Com-Rounds: 22.46%
+ 3 Com-Rounds: 22.41%
+ 4 Com-Rounds: 20.08%
+ 5 Com-Rounds: 23.66%
+ 6 Com-Rounds: 21.57%
+
+Aggregation: mask
+      Central: 77.90%
+ mask 33%
+ 1  Com-Round: 16.82%
+ 2 Com-Rounds: 32.57%
+ 3 Com-Rounds: 42.17%
+ 4 Com-Rounds: 45.21%
+ 5 Com-Rounds: 52.59%
+ 6 Com-Rounds: 57.74%
+
+ mask 50%
+ 1  Com-Round: 27.94%
+ 2 Com-Rounds: 49.67%
+ 3 Com-Rounds: 57.95%
+ 4 Com-Rounds: 60.16%
+ 5 Com-Rounds: 62.06%
+ 6 Com-Rounds: 62.32%
+
+ mask 67%
+ 1  Com-Round: 39.63%
+ 2 Com-Rounds: 59.14%
+ 3 Com-Rounds: 64.65%
+ 4 Com-Rounds: 64.16%
+ 5 Com-Rounds: 65.31%
+ 6 Com-Rounds: 65.17%
