@@ -65,8 +65,8 @@ class Net(nn.Module):
         -> Output (10)
         '''
         self.fcLayer2 = nn.Sequential(
-            nn.Linear(128, 10),
-            nn.ReLU()
+            nn.Linear(128, 10) # ,
+            # nn.ReLU()
         )
 
     def forward(self, x):
