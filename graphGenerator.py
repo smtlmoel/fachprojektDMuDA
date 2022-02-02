@@ -102,5 +102,27 @@ def main():
     plt.savefig("presentation/aggregation_mask.png")
     plt.show()
 
+    # Fourth Figure
+    epochs = [1, 2, 3, 5, 10, 15, 30, 50, 75, 100]
+    data = [0.5045, 0.7120, 0.7356, 0.7534, 0.7580, 0.7652, 0.7773, 0.7773, 0.7759, 0.7785]
+    plt.scatter(epochs, data)
+    plt.plot(epochs, data, label="4 Clients")
+
+    plt.ylim(0.4, 0.82)
+
+    # Central : 0.79.97
+    plt.axhline(y=0.7997, color="black")
+    central_line = mlines.Line2D([0], [0], color='black', label='Central')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    handles.extend([central_line])
+    plt.legend(handles=handles)
+
+    plt.title("300 Epochs")
+    plt.xlabel("Number of communication rounds")
+    plt.ylabel("Accuracy")
+
+    plt.savefig("presentation/300epochs.png")
+    plt.show()
+
 if __name__ == '__main__':
     main()
