@@ -42,6 +42,10 @@ def main():
 
     # Second Figure
     epochs = [1, 2, 3, 4, 5, 6]
+    data = [0.6094, 0.6750, 0.6788, 0.6897, 0.6815, 0.6903]
+    plt.scatter(epochs, data)
+    plt.plot(epochs, data, label="no layer skipped")
+
     data = [0.5267, 0.6147, 0.6327, 0.6431, 0.6400, 0.6382]
     plt.scatter(epochs, data)
     plt.plot(epochs, data, label="Convolution layer 1")
@@ -73,17 +77,21 @@ def main():
 
     # Third figure
     epochs = [1, 2, 3, 4, 5, 6]
+    data = [0.6094, 0.6750, 0.6788, 0.6897, 0.6815, 0.6903]
+    plt.scatter(epochs, data)
+    plt.plot(epochs, data, label="no mask")
+
     data = [0.1682, 0.3257, 0.4217, 0.4521, 0.5259, 0.5774]
     plt.scatter(epochs, data)
-    plt.plot(epochs, data, label="mask 33%")
+    plt.plot(epochs, data, label="mask 67% dropout")
 
     data = [0.2794, 0.4967, 0.5795, 0.6016, 0.6206, 0.6232]
     plt.scatter(epochs, data)
-    plt.plot(epochs, data, label="mask 50%")
+    plt.plot(epochs, data, label="mask 50% dropout")
 
     data = [0.3963, 0.5914, 0.6465, 0.6416, 0.6531, 0.6517]
     plt.scatter(epochs, data)
-    plt.plot(epochs, data, label="mask 67%")
+    plt.plot(epochs, data, label="mask 33% dropout")
 
     plt.ylim(0, 0.9)
     plt.xlim(0, 7)

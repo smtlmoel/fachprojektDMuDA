@@ -1,13 +1,14 @@
 19.01.:
 
 60 Epochen: (4 Clients)
-      Central: 77.90%
- 1  Com-Round: 60.94%
- 2 Com-Rounds: 67.50%
- 3 Com-Rounds: 67.88%
- 4 Com-Rounds: 68.97%
- 5 Com-Rounds: 68.15%
- 6 Com-Rounds: 69.03%
+               mit Relu     ohne Relu
+      Central: 77.90%       77.06%
+ 1  Com-Round: 60.94%       60.89%
+ 2 Com-Rounds: 67.50%       67.89%
+ 3 Com-Rounds: 67.88%       68.67%
+ 4 Com-Rounds: 68.97%       69.14%
+ 5 Com-Rounds: 68.15%       69.42%
+ 6 Com-Rounds: 69.03%       69.19%
 10 Com-Rounds: 68.27%
 12 Com-Rounds: 68.60%
 15 Com-Rounds: 68.99%
@@ -30,7 +31,6 @@
 100 Com-Rounds: 77.85%
 
 26.01.:
---keine grafik
 Num of clients:2
       Central: 77.60%
  1  Com-Round: 67.51%
@@ -40,7 +40,6 @@ Num of clients:2
  5 Com-Rounds: 74.31%
  6 Com-Rounds: 74.66%
 10 Com-Rounds: 74.64%
---keine grafik
 Num of clients:8
       Central: 77.56%
  1  Com-Round: 54.52%
